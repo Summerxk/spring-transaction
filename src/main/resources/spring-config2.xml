@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd 
+							http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd ">
+
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<property name="driverClassName" value="${driverClassName}" />
+		<property name="jdbcUrl" value="${jdbcUrl}" />
+		<property name="username" value="${username}" />
+		<property name="password" value="${password}" />
+	</bean>
+
+	<bean id = "accountDao" class = "cn.tamilin.transaction.demo2.dao.AccountDaoImpl">
+			<property name="dataSource" ref="dataSource" />
+	</bean>
+	<bean id = "accountService" class = "cn.tamilin.transaction.demo2.service.AccountServicesImpl">
+			<property name="accountDao" ref="accountDao" />
+	</bean>
+
+	<bean id = "transactionManager" class = "org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref = "dataSource"></property>
+	</bean>
+
+	<bean id = "accournServiceProxy" class = "org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+		<property name="target" ref = "accountService" />
+		<property name="transactionManager" ref = "transactionManager"/>
+		<property name="transactionAttributes">
+			<props>
+				<!-- 
+				prop的格式：
+					* PROPAGATION	:事务的传播行为
+					* ISOLATION		：事务的隔离级别
+					* readOnly		:只读(不能修改，插入 ，删除)
+					* -Exception	:发生哪些异常回滚事务
+					* +Exception	：发生哪些异常事务不回滚
+				 -->
+				 <!--key ： method  -->
+				<prop key="transfer">PROPAGATION_REQUIRE</prop>
+			</props>
+		</property>
+	</bean>
+</beans>
